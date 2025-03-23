@@ -1,0 +1,1 @@
+ALTER TABLE "Vehicle_transfers" ADD COLUMN "supplier_id" varchar(255);
