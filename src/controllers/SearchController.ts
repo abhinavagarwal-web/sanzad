@@ -11,7 +11,7 @@ import { zones, transfers_Vehicle
 , } from "../db/schema/SupplierSchema";
 import { Create_Vehicles } from "../db/schema/SupplierSchema";
 
- const GOOGLE_MAPS_API_KEY = "AIzaSyAjXkEFU-hA_DSnHYaEjU3_fceVwQra0LI"; // Replace with actual API key
+ const GOOGLE_MAPS_API_KEY = ""; // Replace with actual API key
  import * as turf from '@turf/turf'; // Import turf.js for geospatial operations
 
  export const fetchFromDatabase = async (
