@@ -92,35 +92,44 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
       return isPointInsidePolygon(toLng, toLat, coordinates);
     });
 
-    // Step 6: Calculate Pricing for Each Vehicle
-    const vehiclesWithPricing = transfers.map(transfer => {
-      const price = Number(transfer.price);
-      const dist = Number(distance);
-      let totalPrice = price * dist; // Base price
+   const vehiclesWithPricing = transfers.map(transfer => {
+  const price = Number(transfer.price); // Base price per mile
+  const dist = Number(distance); // Total distance in miles
+  let totalPrice = price * dist; // Base total price
 
-      // Apply extra charge if 'To' location is outside the zone
-      if (fromZone && !toZone) {
-        const boundaryDistance = getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, fromZone);
-        const bd = Number(boundaryDistance);
-        const extraCharge = bd * (transfer.extra_price_per_mile || 0); // Use extra_price_per_km from transfers
-        totalPrice += extraCharge;
-      }
+  const extraPricePerMile = transfer.extra_price_per_mile ?? 0;
 
-      return {
-        vehicleId: transfer.vehicle_id,
-        vehicalType: transfer.VehicleType,
-        brand: transfer.VehicleBrand,
-        vehicleName: transfer.name,
-        extraPricePerKm: transfer.extra_price_per_mile, // Added extra_price_per_km
-        price: Number(totalPrice.toFixed(2)),
-        nightTime: transfer.NightTime,
-        passengers: transfer.Passengers,
-        currency: transfer.Currency,
-        mediumBag: transfer.MediumBag,
-        nightTimePrice: transfer.NightTime_Price,
-        transferInfo: transfer.transfer_info
-      };
-    });
+  if (fromZone && toZone) {
+    // Case 1: Both inside a zone → No extra charge
+    totalPrice = price * dist;
+  } else if (!fromZone && toZone) {
+    // Case 2: From is outside, To is inside → Calculate extra distance
+    const extraDistance = getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, toZone);
+    const extraMiles = Number(extraDistance) || 0;
+    const extraCharge = extraMiles * extraPricePerMile;
+    totalPrice = price * dist + extraCharge;
+  } else if (!fromZone && !toZone) {
+    // Case 3: Both locations outside → Apply extra price for full distance
+    const extraCharge = dist * extraPricePerMile;
+    totalPrice = price * dist + extraCharge;
+  }
+
+  return {
+    vehicleId: transfer.vehicle_id,
+    vehicalType: transfer.VehicleType,
+    brand: transfer.VehicleBrand,
+    vehicleName: transfer.name,
+    extraPricePerKm: transfer.extra_price_per_mile,
+    price: Number(totalPrice.toFixed(2)), // Round to 2 decimal places
+    nightTime: transfer.NightTime,
+    passengers: transfer.Passengers,
+    currency: transfer.Currency,
+    mediumBag: transfer.MediumBag,
+    nightTimePrice: transfer.NightTime_Price,
+    transferInfo: transfer.transfer_info
+  };
+});
+
 
     return { vehicles: vehiclesWithPricing, distance: distance };
   } catch (error) {
