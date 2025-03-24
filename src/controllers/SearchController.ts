@@ -101,7 +101,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
 
   if (fromZone && toZone) {
     // Case 1: Both inside a zone → No extra charge
-    totalPrice = price * dist;
+    totalPrice = basePrice;
   } else if (!fromZone && toZone) {
     // Case 2: From is outside, To is inside → Calculate extra distance
     const extraDistance = getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, toZone);
