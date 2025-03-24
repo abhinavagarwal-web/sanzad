@@ -32,7 +32,7 @@ app.use("/api/V1", LoginRoute);
 app.use('/api/V1/agent',AgentRoute);
 app.use('/api/V1/location',LocationRoute);
 app.use('/api/V1/admin',AdminRoute) 
-app.use("/api/V1/data",SearchRouter)
+app.use("/data",SearchRouter)
 app.use('/api/V1/view',ProfileRoute);
 app.use('/api/V1/Booking',BookingRoute)
 // mongoose.connect(MONGOURI).then((result) => {console.log("success")}).catch((error) => {console.error(error)});
