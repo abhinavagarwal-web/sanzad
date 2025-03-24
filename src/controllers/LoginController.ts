@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import { AgentTable } from "../db/schema/AgentSchema"; 
 import { db } from "../db/db"; 
 const crypto = require('crypto');
-import { AdminTable } from "../db/schema/AdminSchema"; 
+import { AdminTable } from "../db/schema/adminSchema"; 
 const nodemailer = require('nodemailer');
 var randomstring = require("randomstring");
 const JWT_SECRET = process.env.JWT_SECRET || 'Sanzad'; 
