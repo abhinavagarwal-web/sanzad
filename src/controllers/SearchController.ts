@@ -111,7 +111,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
   } else if (!fromZone && !toZone) {
     // Case 3: Both locations outside → Apply extra price for full distance
     const extraCharge = dist * extraPricePerMile;
-    totalPrice = price * dist + extraCharge;
+    totalPrice = price + extraCharge;
   }
 
   return {
