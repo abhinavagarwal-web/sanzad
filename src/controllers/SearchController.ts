@@ -181,7 +181,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
      if (zoneToDestinationDistance === null) throw new Error("Failed to fetch zone distance");
  
      // Extra distance outside the zone
-     const extraDistance = Math.max(0, zoneToDestinationDistance - zone.radius_km * 0.621371); // Convert km to miles
+     const extraDistance = Math.max(0, zoneToDestinationDistance - zone.radius_miles); // Convert km to miles
  
      return extraDistance;
    } catch (error) {
