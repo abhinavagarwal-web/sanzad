@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { CreateAdmin } from "../dto/Admin.dto"
-import { AdminTable } from "../db/schema/AdminSchema";
+import { AdminTable } from "../db/schema/adminSchema";
 import { db } from "../db/db";
 import { and,desc, eq } from "drizzle-orm";
 const { AgentTable,OneWayTripTable,RoundTripTable } = require('../db/schema/AgentSchema'); 
