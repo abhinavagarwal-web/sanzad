@@ -13,8 +13,13 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
 
  const GOOGLE_MAPS_API_KEY = "AIzaSyAjXkEFU-hA_DSnHYaEjU3_fceVwQra0LI"; // Replace with actual API key
  import * as turf from '@turf/turf'; // Import turf.js for geospatial operations
+import * as turf from "@turf/turf";
+import axios from "axios";
+import { db, sql } from "../db"; // Adjust this import as needed
 
- export const fetchFromDatabase = async (
+const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
+
+export const fetchFromDatabase = async (
   pickupLocation: string,
   dropoffLocation: string,
   providedDistance?: number
@@ -26,7 +31,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
   try {
     // Step 1: Fetch all zones
     const zonesResult = await db.execute(
-      sql`SELECT id, name, radius_km, geojson FROM zones` // Removed extra_price_per_km from here
+      sql`SELECT id, name, radius_km, geojson FROM zones`
     );
 
     const allZones = zonesResult.rows as any[];
@@ -34,24 +39,16 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     // Step 2: Filter zones that contain 'From' or 'To' location
     const zones = allZones.filter(zone => {
       try {
-        // Parse the geojson if it's a string
-        const geojson = typeof zone.geojson === 'string' ? JSON.parse(zone.geojson) : zone.geojson;
-
-        // Check if the geojson structure is valid
-        if (!geojson || !geojson.geometry || !geojson.geometry.coordinates || !Array.isArray(geojson.geometry.coordinates)) {
+        const geojson = typeof zone.geojson === "string" ? JSON.parse(zone.geojson) : zone.geojson;
+        if (!geojson || !geojson.geometry || !Array.isArray(geojson.geometry.coordinates)) {
           console.warn("Invalid geojson data for zone:", zone.id);
           return false;
         }
 
-        // Extract coordinates from the geometry object
-        const coordinates = geojson.geometry.coordinates;
-
-        // Create a Turf.js polygon and points
-        const polygon = turf.polygon(coordinates);
+        const polygon = turf.polygon(geojson.geometry.coordinates);
         const fromPoint = turf.point([fromLng, fromLat]);
         const toPoint = turf.point([toLng, toLat]);
 
-        // Check if the points are inside the polygon
         return turf.booleanPointInPolygon(fromPoint, polygon) || turf.booleanPointInPolygon(toPoint, polygon);
       } catch (error) {
         console.error("Error processing zone:", zone.id, error);
@@ -80,17 +77,8 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     const distance = providedDistance ?? await getRoadDistance(fromLat, fromLng, toLat, toLng);
 
     // Step 5: Determine if extra pricing applies
-    const fromZone = zones.find(zone => {
-      const geojson = typeof zone.geojson === 'string' ? JSON.parse(zone.geojson) : zone.geojson;
-      const coordinates = geojson.geometry.coordinates;
-      return isPointInsidePolygon(fromLng, fromLat, coordinates);
-    });
-
-    const toZone = zones.find(zone => {
-      const geojson = typeof zone.geojson === 'string' ? JSON.parse(zone.geojson) : zone.geojson;
-      const coordinates = geojson.geometry.coordinates;
-      return isPointInsidePolygon(toLng, toLat, coordinates);
-    });
+    const fromZone = zones.find(zone => isPointInsideZone(fromLng, fromLat, zone.geojson));
+    const toZone = zones.find(zone => isPointInsideZone(toLng, toLat, zone.geojson));
 
     // Step 6: Calculate Pricing for Each Vehicle
     const vehiclesWithPricing = transfers.map(transfer => {
@@ -99,9 +87,12 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
       // Apply extra charge if 'To' location is outside the zone
       if (fromZone && !toZone) {
         const boundaryDistance = getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, fromZone);
-        const bd = Number(boundaryDistance);
-        const extraCharge = bd * (transfer.extra_price_per_mile || 0); // Use extra_price_per_km from transfers
+        const extraCharge = boundaryDistance * (transfer.extra_price_per_mile || 0);
         totalPrice += extraCharge;
+
+        console.log("Boundary Distance:", boundaryDistance);
+        console.log("Extra Charge Per Mile:", transfer.extra_price_per_mile);
+        console.log("Final Price After Extra Charge:", totalPrice);
       }
 
       return {
@@ -109,7 +100,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
         vehicalType: transfer.VehicleType,
         brand: transfer.VehicleBrand,
         vehicleName: transfer.name,
-        extraPricePerKm: transfer.extra_price_per_mile, // Added extra_price_per_km
+        extraPricePerKm: transfer.extra_price_per_mile, // Ensure correct unit
         price: Number(totalPrice.toFixed(2)),
         nightTime: transfer.NightTime,
         passengers: transfer.Passengers,
@@ -126,69 +117,71 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     throw new Error("Failed to fetch zones and vehicle pricing.");
   }
 };
- 
- // Function to check if a point is inside a polygon (GeoJSON)
- function isPointInsidePolygon(lng: number, lat: number, polygonCoordinates: number[][][]) {
-   const point = [lng, lat];
-   let inside = false;
-   const coordinates = polygonCoordinates[0];
- 
-   for (let i = 0, j = coordinates.length - 1; i < coordinates.length; j = i++) {
-     const xi = coordinates[i][0],
-       yi = coordinates[i][1];
-     const xj = coordinates[j][0],
-       yj = coordinates[j][1];
- 
-     const intersect =
-       yi > lat !== yj > lat &&
-       lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
-     if (intersect) inside = !inside;
-   }
- 
-   return inside;
- }
- 
- // Function to get road distance using Google Maps Distance Matrix API
- export async function getRoadDistance(fromLat: number, fromLng: number, toLat: number, toLng: number) {
-   try {
-     const response = await axios.get(
-       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${fromLat},${fromLng}&destinations=${toLat},${toLng}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`
-     );
- 
-     const distanceInMiles = response.data.rows[0]?.elements[0]?.distance?.text;
-     if (!distanceInMiles) throw new Error("Distance not found");
- 
-     return parseFloat(distanceInMiles.replace(" mi", "")); // Convert "12.3 mi" to 12.3
-   } catch (error) {
-     console.error("Error fetching road distance:", error);
-     return null; // Handle errors gracefully
-   }
- }
- 
- // Function to calculate the extra distance from the 'to' location to the nearest zone boundary
- export async function getDistanceFromZoneBoundary(fromLng: number, fromLat: number, toLng: number, toLat: number, zone: any) {
-   try {
-     // Approximate the zone center (first coordinate in the polygon)
-     const zoneCenterLng = zone.geojson.coordinates[0][0][0];
-     const zoneCenterLat = zone.geojson.coordinates[0][0][1];
- 
-     // Get total road distance
-     const totalDistance = await getRoadDistance(fromLat, fromLng, toLat, toLng);
-     if (totalDistance === null) throw new Error("Failed to fetch total distance");
- 
-     // Get road distance from the zone center to the 'to' location
-     const zoneToDestinationDistance = await getRoadDistance(zoneCenterLat, zoneCenterLng, toLat, toLng);
-     if (zoneToDestinationDistance === null) throw new Error("Failed to fetch zone distance");
- 
-     // Extra distance outside the zone
-     const extraDistance = Math.max(0, zoneToDestinationDistance - zone.radius_miles); // Convert km to miles
- 
-     return extraDistance;
-   } catch (error) {
-     console.error("Error fetching zone boundary distance:", error);
-     return null;
-   }
- }
+
+// Function to check if a point is inside a polygon (GeoJSON) using Turf.js
+function isPointInsideZone(lng: number, lat: number, geojson: any) {
+  try {
+    const point = turf.point([lng, lat]);
+    const polygon = turf.polygon(geojson.geometry.coordinates);
+    return turf.booleanPointInPolygon(point, polygon);
+  } catch (error) {
+    console.error("Error checking point inside polygon:", error);
+    return false;
+  }
+}
+
+// Function to get road distance using Google Maps Distance Matrix API
+export async function getRoadDistance(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  try {
+    const response = await axios.get(
+      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${fromLat},${fromLng}&destinations=${toLat},${toLng}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`
+    );
+
+    const distanceInMiles = response.data.rows[0]?.elements[0]?.distance?.text;
+    if (!distanceInMiles) throw new Error("Distance not found");
+
+    return parseFloat(distanceInMiles.replace(" mi", "")); // Convert "12.3 mi" to 12.3
+  } catch (error) {
+    console.error("Error fetching road distance:", error);
+    return null;
+  }
+}
+
+// Function to calculate the extra distance from the 'to' location to the nearest zone boundary
+export async function getDistanceFromZoneBoundary(fromLng: number, fromLat: number, toLng: number, toLat: number, zone: any) {
+  try {
+    const [zoneCenterLng, zoneCenterLat] = getZoneCentroid(zone.geojson);
+
+    const totalDistance = await getRoadDistance(fromLat, fromLng, toLat, toLng);
+    if (totalDistance === null) throw new Error("Failed to fetch total distance");
+
+    const zoneToDestinationDistance = await getRoadDistance(zoneCenterLat, zoneCenterLng, toLat, toLng);
+    if (zoneToDestinationDistance === null) throw new Error("Failed to fetch zone distance");
+
+    const extraDistance = Math.max(0, totalDistance - zone.radius_km); // Convert km to miles
+
+    console.log("Zone Radius (in miles):", zone.radius_km);
+    console.log("Total Distance:", totalDistance);
+    console.log("Zone to Destination Distance:", zoneToDestinationDistance);
+    console.log("Extra Distance:", extraDistance);
+
+    return extraDistance;
+  } catch (error) {
+    console.error("Error fetching zone boundary distance:", error);
+    return null;
+  }
+}
+
+// Function to calculate the centroid of a zone polygon
+function getZoneCentroid(zoneGeoJson: any) {
+  try {
+    return turf.centroid(zoneGeoJson).geometry.coordinates;
+  } catch (error) {
+    console.error("Error computing zone centroid:", error);
+    return [0, 0]; // Default to avoid crashes
+  }
+}
+
 
 export const getBearerToken = async (
     url: string,
