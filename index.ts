@@ -21,11 +21,6 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true})); 
 // app.use("/admin", AdminRoute);
-app.use("/", (req, res) => {
-    res.json({
-        "message":"done", 
-    });
-});
  
 app.use("/api/V1/supplier", SupplierRoute); 
 app.use("/api/V1", LoginRoute);
