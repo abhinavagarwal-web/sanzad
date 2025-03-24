@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "../db/db"; 
 import { AgentTable } from "../db/schema/AgentSchema";
 import { registerTable } from "../db/schema/SupplierSchema";
-import { AdminTable } from "../db/schema/AdminSchema";
+import { AdminTable } from "../db/schema/adminSchema";
 import { AgentInput, SupplierInput, AdminInput } from "../dto/Profile.dto"; 
 import { eq } from "drizzle-orm";
 
