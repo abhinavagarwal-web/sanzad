@@ -95,7 +95,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
    const vehiclesWithPricing = transfers.map(transfer => {
   const price = Number(transfer.price); // Base price per mile
   const dist = Number(distance); // Total distance in miles
-  let totalPrice = price * dist; // Base total price
+  let totalPrice = price; // Base total price
 
   const extraPricePerMile = transfer.extra_price_per_mile ?? 0;
 
@@ -107,7 +107,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     const extraDistance = getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, toZone);
     const extraMiles = Number(extraDistance) || 0;
     const extraCharge = extraMiles * extraPricePerMile;
-    totalPrice = price * dist + extraCharge;
+    totalPrice = price + extraCharge;
   } else if (!fromZone && !toZone) {
     // Case 3: Both locations outside → Apply extra price for full distance
     const extraCharge = dist * extraPricePerMile;
