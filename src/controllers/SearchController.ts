@@ -94,9 +94,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
 
     // Step 6: Calculate Pricing for Each Vehicle
     const vehiclesWithPricing = transfers.map(transfer => {
-      const price = Number(transfer.price);
-      const dist = Number(distance);
-      let totalPrice = price; // Base price
+      let totalPrice = Number(transfer.price); // Base price
 
       // Apply extra charge if 'To' location is outside the zone
       if (fromZone && !toZone) {
