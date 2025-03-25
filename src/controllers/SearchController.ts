@@ -35,18 +35,17 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     const zones = allZones.filter(zone => {
       try {
         const geojson = typeof zone.geojson === "string" ? JSON.parse(zone.geojson) : zone.geojson;
-
-        if (!geojson || !geojson.geometry || !geojson.geometry.coordinates || !Array.isArray(geojson.geometry.coordinates)) {
+    
+        if (!geojson || !geojson.geometry || !Array.isArray(geojson.geometry.coordinates)) {
           console.warn("Invalid geojson data for zone:", zone.id);
           return false;
         }
-
+    
         const coordinates = geojson.geometry.coordinates;
         const polygon = turf.polygon(coordinates);
         const fromPoint = turf.point([fromLng, fromLat]);
-        const toPoint = turf.point([toLng, toLat]);
-
-        return turf.booleanPointInPolygon(fromPoint, polygon) || turf.booleanPointInPolygon(toPoint, polygon);
+    
+        return turf.booleanPointInPolygon(fromPoint, polygon); // Only check 'from' inside
       } catch (error) {
         console.error("Error processing zone:", zone.id, error);
         return false;
