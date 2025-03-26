@@ -18,7 +18,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
   pickupLocation: string,
   dropoffLocation: string,
   providedDistance?: number
-): Promise<{ vehicles: any[]; distance: any }> => {
+): Promise<{ vehicles: any[]; distance: any; estimatedTime: string}> => {
   // Parse pickup location coordinates
   const [fromLat, fromLng] = pickupLocation.split(",").map(Number);
   const [toLat, toLng] = dropoffLocation.split(",").map(Number);
@@ -70,7 +70,9 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
     const transfers = transfersResult.rows as any[];
 
     // Step 4: Calculate Distance
-    const distance = providedDistance ?? await getRoadDistance(fromLat, fromLng, toLat, toLng);
+    const { distance, duration } = providedDistance 
+  ? { distance: providedDistance, duration: "N/A" } 
+  : await getRoadDistance(fromLat, fromLng, toLat, toLng);
 
     // Step 5: Determine if extra pricing applies
     const fromZone = zones.find(zone => {
@@ -127,7 +129,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
       };
     }));
 
-    return { vehicles: vehiclesWithPricing, distance: distance };
+    return { vehicles: vehiclesWithPricing, distance: distance, estimatedTime: duration };
   } catch (error) {
     console.error("Error fetching zones and vehicles:", error);
     throw new Error("Failed to fetch zones and vehicle pricing.");
@@ -173,13 +175,18 @@ export async function getRoadDistance(fromLat: number, fromLng: number, toLat: n
       `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${fromLat},${fromLng}&destinations=${toLat},${toLng}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`
     );
 
-    const distanceInMiles = response.data.rows[0]?.elements[0]?.distance?.text;
-    if (!distanceInMiles) throw new Error("Distance not found");
+    const distanceText = response.data.rows[0]?.elements[0]?.distance?.text;
+    const durationText = response.data.rows[0]?.elements[0]?.duration?.text;
 
-    return parseFloat(distanceInMiles.replace(" mi", "")); // Convert "12.3 mi" to 12.3
+    if (!distanceText || !durationText) throw new Error("Distance or duration not found");
+
+    return {
+      distance: parseFloat(distanceText.replace(" mi", "")), // Convert "12.3 mi" to 12.3
+      duration: durationText // Keep as string (e.g., "25 mins")
+    };
   } catch (error) {
     console.error("Error fetching road distance:", error);
-    return null;
+    return { distance: null, duration: null };
   }
 }
 
@@ -337,9 +344,9 @@ export const Search = async (req: Request, res: Response, next: NextFunction) =>
     const [pickupLat, pickupLon] = pickupLocation.split(",").map(Number);
     const [dropLat, dropLon] = dropoffLocation.split(",").map(Number);
     // Merge database and API data
-    const mergedData = [ ...apiData.flat(), ...DatabaseData.vehicles, DatabaseData.distance];
+    const mergedData = [ ...apiData.flat(), ...DatabaseData.vehicles];
 
-    res.json({ success: true, data: mergedData, distance: DatabaseData.distance });
+    res.json({ success: true, data: mergedData, distance: DatabaseData.distance, estimatedTime: DatabaseData.estimatedTime });
   } catch (error: any) {
     console.error("Error fetching and merging data:", error.message);
     res.status(500).json({ success: false, message: "Error processing request", error });
