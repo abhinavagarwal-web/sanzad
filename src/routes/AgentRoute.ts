@@ -1,7 +1,7 @@
 import express, {Request, Response, NextFunction, Router} from 'express'; 
 import authMiddleware from '../middlewares/authMiddleware';
 import { ForgetPassword,resetPassword } from '../controllers/AgentController';
-import { CreateAgent,GetAgent,loginAgent,GetBill,OneWayTrip,RoundTrip,GetOneWayTrip,GetRoundTrip,UpdateOneWayTrip, sendOtp, verifyOtp } from '../controllers'; 
+import { CreateAgent,GetAgent,loginAgent,QuickEmail,GetBill,OneWayTrip,RoundTrip,GetOneWayTrip,GetRoundTrip,UpdateOneWayTrip, sendOtp, verifyOtp } from '../controllers'; 
 import { Emailotps } from '../controllers/EmailotpsController'; 
 import { dashboard } from '../controllers/LoginController';
 const multer = require('multer');
@@ -41,6 +41,7 @@ router.put('/UpdateOneWayTrip',UpdateOneWayTrip);
 router.post('/RoundTrip',RoundTrip); 
 router.get('/GetRoundTrip',GetRoundTrip);
 router.post('/send-otp', sendOtp);
+router.post('/QuickEmail',QuickEmail);
 router.post('/verify-otp', verifyOtp)
 router.get('/dashboard', authMiddleware, dashboard);
 export {router as AgentRoute}; 
