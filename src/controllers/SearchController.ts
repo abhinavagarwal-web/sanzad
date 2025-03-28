@@ -125,7 +125,7 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
         currency: transfer.Currency,
         mediumBag: transfer.MediumBag,
         nightTimePrice: transfer.NightTime_Price,
-        transferInfo: transfer.transfer_info
+        transferInfo: transfer.Transfer_info
       };
     }));
 
