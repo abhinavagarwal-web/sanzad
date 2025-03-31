@@ -114,6 +114,7 @@ export const PaymentStatusUpdate = async (req: Request, res: Response, next: Nex
   }
   };
 
+  
   export const PaymentWithReferenceNo = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
@@ -161,7 +162,7 @@ export const PaymentStatusUpdate = async (req: Request, res: Response, next: Nex
       // Insert payment details
       await db.insert(PaymentsTable).values({
         booking_id: bookingId,
-        payment_method: 'CCavenue',
+        payment_method: 'Reference',
         payment_status: 'pending',
         transaction_id: null, // CCAvenue Transaction ID
         reference_number: reference_number, // Not needed for CCAvenue
@@ -171,7 +172,7 @@ export const PaymentStatusUpdate = async (req: Request, res: Response, next: Nex
       return res.status(201).json({
         message: 'Payment info saved successfully',
         booking_id: bookingId,
-        transaction_id: orderId
+        orderId: orderId
       });
   
     } catch (error) {
