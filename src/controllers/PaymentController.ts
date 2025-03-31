@@ -13,8 +13,8 @@ export const PaymentIniciate = async (req: Request, res: Response, next: NextFun
         const merchantId = process.env.CCAVENUE_MERCHANT_ID!;
         const accessCode = process.env.CCAVENUE_ACCESS_CODE!;
         const workingKey = process.env.CCAVENUE_WORKING_KEY!;
-        const redirectUrl = "https://fc6c-103-214-60-241.ngrok-free.app/api/V1/payment/payment-status-update";
-        const cancelUrl = "https://fc6c-103-214-60-241.ngrok-free.app/cancle";
+        const redirectUrl = "https://sanzad.vercel.app/api/V1/payment/payment-status-update";
+        const cancelUrl = "https://sanzad.vercel.app/cancle";
         const customerEmail = "abhinavgu34@gmail.com";
         const customerPhone = "8433169822";
 
