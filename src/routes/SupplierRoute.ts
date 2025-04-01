@@ -76,7 +76,7 @@ router.post('/new_transfer',createTransfer);
 router.delete('/deleteZone/:id',deleteZone);
 router.get('/getVehiclebySupplierId/:id',GetVehicleBySupplierId);
 router.get('/getZonebySupplierId/:id',GetZoneBySupplierId);
-router.get('/getTransferById/:id',getTransferById);
+router.get('/gettransferbyid/:id',getTransferById);
 router.put('/updateTransfer/:id',updateTransfer);
 router.delete('/deleteTransfer/:id',deleteTransfer);
 // router.get('/products', GetProducts); 
