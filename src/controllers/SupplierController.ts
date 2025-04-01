@@ -1594,7 +1594,25 @@ export const getTransferById = async (req: Request, res: Response) => {
 export const getTransferBySupplierId = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const transfer = await db.select().from(transfers_Vehicle).where(eq(transfers_Vehicle.supplier_id, id));
+        const transfer = await db.select({
+            id:transfers_Vehicle.id,
+            supplier_id:transfers_Vehicle.supplier_id,
+            vehicle_id:transfers_Vehicle.vehicle_id,
+            zone_id:transfers_Vehicle.zone_id,
+            price:transfers_Vehicle.price,
+            extra_price_per_mile:transfers_Vehicle.extra_price_per_mile,
+            Currency: transfers_Vehicle.Currency,
+            Transfer_info:transfers_Vehicle.Transfer_info,
+            NightTime:transfers_Vehicle.NightTime,
+            NightTime_Price:transfers_Vehicle.NightTime_Price,
+            Zone_name:zones.name,
+            VehicleType:Create_Vehicles.VehicleType,
+            VehicleBrand:Create_Vehicles.VehicleBrand,
+            ServiceType: Create_Vehicles.ServiceType,
+            VehicleModel: Create_Vehicles.VehicleModel
+            }).from(transfers_Vehicle).where(eq(transfers_Vehicle.supplier_id, id))
+        .innerJoin(zones, eq(transfers_Vehicle.zone_id, zones.id))
+        .innerJoin(Create_Vehicles,eq(transfers_Vehicle.vehicle_id,Create_Vehicles.id));
         
         if (!transfer) {
             return res.status(404).json({ message: "Transfers not found" });
