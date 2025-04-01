@@ -2,7 +2,7 @@ import { Supplier_price, TransportNode,resetPasswords,ForgetPasswords, CreateVeh
 import authMiddleware from '../middlewares/authMiddleware';
 import express, {Request, Response, NextFunction, Router} from 'express'; 
 import { CreateSupplier,UpdateVehicleTypes,UpdateVehicleModels,deleteZone,UpdateVehicleBrands,UpdateServiceTypes,DeleteVehicleType,GetSupplier,SurgeCharges,GetVehicleCarDetails,GetAllCarDetails,GetTransferCarDetails,UpdateTransferCar,UpdateExtra,CreateVehicleType,GetVehicleBrand,CreateVehicleBrand,CreateServiceType,CreateVehicleModel,GetVehicleType,
-    GetCarDetails,GetServiceType,DeleteVehicleModel,DeleteServiceType,DeleteVehicleBrand,CreateExtraSp,UpdatedSignleCarDetails,GetVehicleModel,DeleteSingleCarDetails,CreateTransferCarDetails,suppliersendOtp,supplierverifyOtp,CreateCartDetail,Supplier_details, GetSupplier_details, deleteUserById,  One_Way_Details, CreateSupplierApi} from '../controllers'; 
+    GetCarDetails,GetServiceType,DeleteVehicleModel,DeleteServiceType,DeleteVehicleBrand,CreateExtraSp,UpdatedSignleCarDetails,GetVehicleModel,DeleteSingleCarDetails,CreateTransferCarDetails,suppliersendOtp,supplierverifyOtp,CreateCartDetail,Supplier_details, GetSupplier_details, deleteUserById,  One_Way_Details, CreateSupplierApi, updateTransfer,getTransferById,deleteTransfer} from '../controllers'; 
     const multer = require('multer');
     import fs from 'fs';
     import path from 'path';
@@ -76,6 +76,9 @@ router.post('/new_transfer',createTransfer);
 router.delete('/deleteZone/:id',deleteZone);
 router.get('/getVehiclebySupplierId/:id',GetVehicleBySupplierId);
 router.get('/getZonebySupplierId/:id',GetZoneBySupplierId);
+router.get('/getTransferById/:id',getTransferById);
+router.put('/updateTransfer/:id',updateTransfer);
+router.delete('/deleteTransfer/:id',deleteTransfer);
 // router.get('/products', GetProducts); 
 // router.get('/product/:id', GetProductById);
 // router.get('/product/:Keyword', SearchProduct); 
