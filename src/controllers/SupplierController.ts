@@ -1590,6 +1590,21 @@ export const getTransferById = async (req: Request, res: Response) => {
     }
 };
 
+// Get Transfer by Supplier ID
+export const getTransferBySupplierId = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const transfer = await db.select().from(transfers_Vehicle).where(eq(transfers_Vehicle.supplier_id, id));
+        
+        if (!transfer) {
+            return res.status(404).json({ message: "Transfers not found" });
+        }
+        res.json(transfer);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching transfer", error });
+    }
+};
+
 // Update Transfer
 export const updateTransfer = async (req: Request, res: Response) => {
     try {
