@@ -241,10 +241,12 @@ export type supplier_otps = {
 export const SurgeChargeTable=pgTable('SurgeCharge',{
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(), 
   VehicleName:varchar({length:255}),
-  Date:date(),
-  ExtraPrice:varchar({length:255}),
-  uniqueId:varchar({length:255}),
-})   
+  From:date(), 
+  To:date(), 
+  SurgeChargePrice:varchar({length:255}),
+  vehicle_id: uuid("vehicle_id").references(() => Create_Vehicles.id),
+  supplier_id:varchar({length:255})
+}); 
      
   export const VehicleTypeTable=pgTable('VehicleType',{
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(), 
