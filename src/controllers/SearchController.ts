@@ -101,7 +101,8 @@ import { Create_Vehicles } from "../db/schema/SupplierSchema";
           if (fromZone && !toZone) {
               console.log(`'From' location is inside '${fromZone.name}', but 'To' location is outside any zone.`);
   
-              const boundaryDistance = await getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, fromZone);
+              // const boundaryDistance = await getDistanceFromZoneBoundary(fromLng, fromLat, toLng, toLat, fromZone);
+           const boundaryDistance = distance - fromZone.radius_km;
               const extraCharge = Number(boundaryDistance) * (Number(transfer.extra_price_per_mile) || 0);
               totalPrice += extraCharge;
   
